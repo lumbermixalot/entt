@@ -116,10 +116,11 @@ if(ENTT_CLANG_TIDY_EXECUTABLE)
 
 # Add EnTT goodies
 
-option(ENTT_INCLUDE_HEADERS "Add all EnTT headers to the EnTT target." OFF)
-option(ENTT_INCLUDE_NATVIS "Add EnTT natvis files to the EnTT target." OFF)
+option(ENTT_INCLUDE_HEADERS "Add all EnTT headers to the EnTT target." ON)
+option(ENTT_INCLUDE_NATVIS "Add EnTT natvis files to the EnTT target." ON)
 
 if(ENTT_INCLUDE_HEADERS)
+    message(STATUS "GALIB")
     set(
         HEADERS_FILES
         config/config.h
@@ -200,13 +201,24 @@ if(ENTT_INCLUDE_HEADERS)
         tools.hpp
     )
 
-    list(TRANSFORM HEADERS_FILES APPEND ">" OUTPUT_VARIABLE HEADERS_BUILD_INTERFACE)
-    list(TRANSFORM HEADERS_BUILD_INTERFACE PREPEND "$<BUILD_INTERFACE:${EnTT_SOURCE_DIR}/src/entt/")
+    # Transform paths to absolute paths for the build tree
+    list(TRANSFORM HEADERS_FILES PREPEND "${EnTT_SOURCE_DIR}/src/entt/")
+    
+    # Add sources to target
+    target_sources(EnTT INTERFACE ${HEADERS_FILES})
 
-    list(TRANSFORM HEADERS_FILES APPEND ">" OUTPUT_VARIABLE HEADERS_INSTALL_INTERFACE)
-    list(TRANSFORM HEADERS_INSTALL_INTERFACE PREPEND "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/entt/")
-
-    target_sources(EnTT INTERFACE ${HEADERS_BUILD_INTERFACE} ${HEADERS_INSTALL_INTERFACE})
+    if(MSVC)
+        foreach(HEADER_FILE ${HEADERS_FILES})
+            get_filename_component(DIR_NAME "${HEADER_FILE}" DIRECTORY)
+            string(REPLACE "${EnTT_SOURCE_DIR}/src/entt/" "" REL_DIR "${DIR_NAME}")
+            if(REL_DIR)
+                string(REPLACE "/" "\\" GROUP_NAME "${REL_DIR}")
+                source_group("${GROUP_NAME}" FILES "${HEADER_FILE}")
+            else()
+                source_group("Headers" FILES "${HEADER_FILE}")
+            endif()
+        endforeach()
+    endif()
 endif()
 
 if(ENTT_INCLUDE_NATVIS)

@@ -421,6 +421,23 @@ public:
         }
     }
 
+    //////////////////////////////////////////////
+    // Added by Illumiton BEGIN
+    // Returns a raw pointer to the contained instance, without checking the type.
+    // This is useful when you want to move the contained object out of the wrapper,
+    // and you don't care about the type safety. Use with caution.
+    [[nodiscard]] void *take_data() noexcept {
+        if (mode == any_policy::cref) {
+            return nullptr;
+        }
+        void* ptr = const_cast<void *>(std::as_const(*this).data());
+        deleter = nullptr; // Prevent the deleter from being called in the destructor.
+        reset();
+        return ptr;
+    }
+    // Added ny Illumiton END
+    //////////////////////////////////////////////
+
     /**
      * @brief Replaces the contained object by creating a new instance directly.
      * @tparam Type Type of object to use to initialize the wrapper.

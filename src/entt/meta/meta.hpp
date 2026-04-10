@@ -543,6 +543,19 @@ public:
         vtable = nullptr;
     }
 
+    //////////////////////////////////////////////
+    // Added by Illumiton BEGIN
+    [[nodiscard]] void *take_data() noexcept {
+        void *ptr = storage.take_data();
+        if(ptr) {
+            node = nullptr;   // Prevent the node from being accessed in the destructor.
+            vtable = nullptr; // Prevent the vtable from being called in the destructor.
+        };
+        return ptr;
+    }
+    // Added by Illumiton END
+    //////////////////////////////////////////////
+
     /**
      * @brief Returns a sequence container proxy.
      * @return A sequence container proxy for the underlying object.
